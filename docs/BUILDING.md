@@ -116,23 +116,38 @@ Win32 display). After building, manually verify:
 
 1. Launch `configurator.exe` with no arguments — the profile-selection
    dialog appears (Ukrainian UI text).
-2. Pick "BRAVO (сервер)" — the file-open dialog appears, defaulted to
-   `bravo.ini`.
-3. Open a real (or the schema-shaped example) `bravo.ini` — the editor
-   opens directly; text encoding is always auto-detected, there is no
-   GUI override (pass `--encoding` on the CLI `--validate` path if a
-   legacy codepage ever needs to be forced — see `chooseFile`'s doc
-   comment in `window.go`).
+2. Pick "BRAVO (сервер)". Two cases (see ARCHITECTURE.md's
+   "Auto-discovery"):
+   - A real `bravo.ini` already exists in the OS system directory
+     (`SysWOW64` on 64-bit Windows, `System32` on 32-bit) — the editor
+     opens **directly**, no file dialog at all; confirm the banner shows
+     that exact system-directory path.
+   - It doesn't exist there yet — an informational dialog explains where
+     it looked, then the manual "open file" dialog appears, defaulted to
+     `bravo.ini`.
+3. Open a real (or the schema-shaped example) `bravo.ini` via the file
+   dialog (if step 2 needed one) — the editor opens directly; text
+   encoding is always auto-detected, there is no GUI override (pass
+   `--encoding` on the CLI `--validate` path if a legacy codepage ever
+   needs to be forced — see `chooseFile`'s doc comment in `window.go`).
 4. The editor window opens with one tab per section; confirm the `[model]`
    tab shows `MODEL`/`BLOG`/`BEXCH` with their current values.
 5. Clear the `MODEL` field — confirm its status label shows a required-field
    error and the **Save** button becomes disabled.
 6. Restore a value — confirm **Save** re-enables.
 7. Click **Save** — confirm a `.bak` file appears next to the original with
-   a timestamp, and the success dialog names its path.
+   a timestamp, and the success dialog names its path. If this was the
+   canonical system-directory `bravo.ini` (step 2's first case), also
+   confirm a `bravo.ini` copy appeared/updated next to `configurator.exe`
+   itself, identical to the just-saved system-directory file — the
+   success dialog names that path too.
 8. Reopen the file — confirm your edit persisted and every field you did
    not touch (including any custom/unrecognized key) is unchanged.
-9. Repeat steps 2–8 with "BIS (client)" and a `bis.ini` file.
+9. Repeat steps 2–8 with "BIS (client)" — auto-discovery looks for
+   `bis.ini` next to `configurator.exe` itself; place one there to hit
+   the direct-open case, or remove it to see the fallback dialog.
+   No root-copy step applies to bis.ini (it's already at its own root
+   location).
 
 ## CI
 

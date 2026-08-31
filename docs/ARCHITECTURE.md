@@ -30,14 +30,28 @@ internal/
   profile/            the two-entry registry mapping "bravo"/"bis" to a
                       display name, default filename, and bundled schema.
 
+  locate/             resolves the two well-known on-disk locations this
+                      tool auto-discovers its files from: SystemDirectory/
+                      SystemBravoIniPath (OS system directory — mirrors
+                      BRAVO-Toolkit's Get-BRAVOSystemDirectoryPath) and
+                      ExecutableDir (the running configurator.exe's own
+                      directory). No knowledge of ini/schema/app; takes
+                      injectable Options for deterministic tests.
+
   app/                GUI layer (github.com/lxn/walk). Split into:
                       - model.go: FormModel, a pure data/logic layer with
                         no walk dependency (schema -> form-field mapping,
                         edit application, save-gating) — unit-tested
                         without a real window.
+                      - discover.go: defaultPathForProfile maps a Profile
+                        to its locate-resolved default path — walk-free,
+                        unit-tested indirectly via save_test.go's
+                        systemBravoIniPathFunc/executableDirFunc stubs.
                       - save.go: backup + render + atomic-write
-                        orchestration for one FormModel — also
-                        walk-independent, unit-tested.
+                        orchestration for one FormModel, plus the
+                        bravo-only "root copy" side effect (see
+                        "Auto-discovery" below) — also walk-independent,
+                        unit-tested.
                       - window.go: actual walk widget construction from a
                         FormModel. Cannot be exercised headlessly (no
                         display in CI); validated by compilation plus the
@@ -45,8 +59,41 @@ internal/
 ```
 
 Dependency direction: `cmd` -> `app` -> {`profile`, `validate`, `ini`,
-`schema`, `backup`}; `validate` -> {`ini`, `schema`}; `profile` ->
-`schema`. Nothing lower-level ever imports `app` or `cmd`.
+`schema`, `backup`, `locate`}; `validate` -> {`ini`, `schema`}; `profile`
+-> `schema`. Nothing lower-level ever imports `app` or `cmd`.
+
+## Auto-discovery
+
+The configurator ships inside the same directory as `bis.ini` on a LIMS
+client install, but `bravo.ini` belongs to the LIMS server component and
+always lives in the OS system directory instead (confirmed by
+BRAVO-Toolkit's own `ConvertFrom-BRAVOIniFile` reader). Rather than make
+an operator browse for either file every time:
+
+- **bis.ini**: `defaultPathForProfile` looks for `Profile.FileHint` next
+  to the running executable (`locate.ExecutableDir()`).
+- **bravo.ini**: `defaultPathForProfile` looks at
+  `locate.SystemBravoIniPath()` — `SysWOW64` on a 64-bit OS, `System32` on
+  a 32-bit OS (bravo.exe is a 32-bit service; WOW64 redirects its
+  "System32" accesses, so `SysWOW64` is the one real, absolute directory
+  bravo.ini lives in on a 64-bit OS). This exactly mirrors
+  BRAVO-Toolkit's `Get-BRAVOSystemDirectoryPath`, so both tools agree on
+  the same authoritative path.
+
+`resolveFilePath` (window.go) tries the default path first; if it doesn't
+exist there (missing `%SystemRoot%`, an unusual deployment layout,
+first-time setup before bravo.ini exists yet, ...) it explains why via a
+`walk.MsgBox` and falls back to the manual "open file" dialog — auto-
+discovery is a shortcut, never the only way in.
+
+After a successful save of the canonical system-directory bravo.ini (and
+only then — not for a file an operator manually browsed to via the
+fallback dialog, and never for bis.ini), `FormModel.Save` also mirrors the
+just-saved bytes to `bravo.ini` next to the executable, so an operator
+without access to browse the system directory can still see the current
+content. A failure of that mirror copy is reported (`SaveResult.RootCopyErr`)
+but never mistaken for a failure of the primary save — see save.go's
+`rootCopyTarget`.
 
 ## Why lxn/walk instead of Fyne
 
@@ -106,6 +153,32 @@ with `RUN_MANUAL_GUI_TEST=1`) or the built `.exe` was driven end-to-end.
 Both bugs were confirmed fixed by screenshot: the full editor window now
 renders all 5 tabs with correct field widgets and an
 "Errors: 0 Warnings: 0" summary for a valid test document.
+
+### A false lead worth recording: `CDERR_DIALOGFAILURE` was a test-harness artifact, not a bug
+
+While building `resolveFilePath`'s fallback path, live testing appeared to
+show a real, 100%-reproducible crash: `FileDialog.ShowOpen` failing with
+`Error 65535` (`CDERR_DIALOGFAILURE`) whenever it followed a `walk.Dialog`
+or `walk.MsgBox` on the same thread. Two rounds of patching
+`third_party/walk/commondialogs.go` (a single retry, then several
+delayed retries) did not fix it, which should have been the first sign
+the diagnosis was wrong — a genuine transient OS race would not survive
+four 50ms-spaced retries. Bisection with a minimal `cmd/repro` program
+(since deleted) proved the real cause: **the test harness was overriding
+the `SystemRoot` environment variable** to point auto-discovery at a
+scratch directory for testing — but `GetOpenFileName` (the Win32 common
+dialog behind `FileDialog.ShowOpen`) *itself* depends on the real
+`%SystemRoot%` for its own internal resource loading. Faking it for one
+test broke an unrelated Windows subsystem. With the real environment
+restored, the exact same code (`Dialog` → `locate.ExecutableDir()` →
+`ShowOpen`) worked every time. No application code changed as a result —
+`window.go`'s `resolveFilePath` and `third_party/walk` both ended up
+identical to before this investigation. Lesson for next time: if
+`%SystemRoot%`, `%windir%`, or another OS-meaningful environment variable
+ever needs overriding for a `locate`-style test, do it only around calls
+that exercise the *tool's own* lookup logic, never around a live
+`FileDialog`/`MsgBox`/common-dialog call — those need the real OS
+environment to function at all.
 
 ## Data flow (GUI path)
 

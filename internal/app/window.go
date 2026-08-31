@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/lxn/walk"
@@ -13,9 +14,10 @@ import (
 )
 
 // RunGUI is the GUI entry point invoked by cmd/configurator/main.go when
-// no --validate flag is given: pick a profile -> pick a file (with an
-// encoding override) -> edit in a generated form -> save. Each step is a
-// modal dialog; RunGUI returns once the editor window is closed.
+// no --validate flag is given: pick a profile -> auto-locate its file (or
+// fall back to a manual "open file" dialog) -> edit in a generated form
+// -> save. Each step is a modal dialog; RunGUI returns once the editor
+// window is closed.
 func RunGUI() error {
 	prof, ok, err := chooseProfile()
 	if err != nil {
@@ -25,15 +27,43 @@ func RunGUI() error {
 		return nil // operator cancelled
 	}
 
-	filePath, forceEncoding, ok, err := chooseFile(prof)
+	filePath, ok, err := resolveFilePath(prof)
 	if err != nil {
-		return fmt.Errorf("app: file selection: %w", err)
+		return fmt.Errorf("app: locating %s: %w", prof.FileHint, err)
 	}
 	if !ok {
 		return nil
 	}
 
-	return openEditor(prof, filePath, forceEncoding)
+	return openEditor(prof, filePath)
+}
+
+// resolveFilePath auto-discovers prof's file at its well-known location
+// (see defaultPathForProfile) and uses it directly when it exists there —
+// no dialog at all. If it cannot be located (missing %SystemRoot%, an
+// unusual deployment layout, first-time setup before bravo.ini exists
+// yet, ...), it explains why and falls back to the manual "open file"
+// dialog: the well-known location is fixed and correctness-critical for
+// bravo.ini, but an operator must still be able to point the tool at a
+// file directly when the automatic guess doesn't hold. ok is false if the
+// operator cancelled the fallback dialog.
+func resolveFilePath(prof profile.Profile) (path string, ok bool, err error) {
+	defaultPath, locateErr := defaultPathForProfile(prof)
+	if locateErr == nil {
+		if _, statErr := os.Stat(defaultPath); statErr == nil {
+			return defaultPath, true, nil
+		}
+	}
+
+	reason := fmt.Sprintf("файл не знайдено за очікуваним шляхом: %s", defaultPath)
+	if locateErr != nil {
+		reason = locateErr.Error()
+	}
+	walk.MsgBox(nil, "Автоматичний пошук файлу",
+		fmt.Sprintf("%s (%s): %s\n\nВкажіть файл вручну.", prof.FileHint, prof.DisplayName, reason),
+		walk.MsgBoxIconInformation)
+
+	return chooseFile(prof)
 }
 
 // chooseProfile shows a small modal dialog offering the two known
@@ -80,27 +110,28 @@ func chooseProfile() (profile.Profile, bool, error) {
 }
 
 // chooseFile shows a native "open file" dialog defaulted to prof's
-// filename. The text encoding is always auto-detected (see internal/ini's
-// DetectAndDecode) — there is no GUI override; use --encoding on the CLI
-// --validate path if a legacy codepage ever needs to be forced. ok is
-// false if the operator cancelled.
-func chooseFile(prof profile.Profile) (path string, forceEncoding ini.Encoding, ok bool, err error) {
+// filename, used as a fallback when resolveFilePath's auto-discovery
+// can't locate the file itself. The text encoding is always auto-detected
+// (see internal/ini's DetectAndDecode) — there is no GUI override; use
+// --encoding on the CLI --validate path if a legacy codepage ever needs
+// to be forced. ok is false if the operator cancelled.
+func chooseFile(prof profile.Profile) (path string, ok bool, err error) {
 	dlg := walk.FileDialog{
 		Title:  fmt.Sprintf("Відкрити %s (%s)", prof.FileHint, prof.DisplayName),
 		Filter: "INI-файли (*.ini)|*.ini|Усі файли (*.*)|*.*",
 	}
 	accepted, err := dlg.ShowOpen(nil)
 	if err != nil {
-		return "", "", false, err
+		return "", false, err
 	}
 	if !accepted {
-		return "", "", false, nil
+		return "", false, nil
 	}
-	return dlg.FilePath, "", true, nil
+	return dlg.FilePath, true, nil
 }
 
-func openEditor(prof profile.Profile, filePath string, forceEncoding ini.Encoding) error {
-	doc, enc, err := ini.ReadFile(filePath, ini.DefaultParseOptions(), forceEncoding)
+func openEditor(prof profile.Profile, filePath string) error {
+	doc, enc, err := ini.ReadFile(filePath, ini.DefaultParseOptions(), "")
 	if err != nil {
 		walk.MsgBox(nil, "Помилка читання", err.Error(), walk.MsgBoxIconError)
 		return err
@@ -191,16 +222,24 @@ func runEditorWindow(model *FormModel) error {
 						Text:     "Зберегти",
 						Enabled:  model.CanSave(),
 						OnClicked: func() {
-							backupPath, err := model.Save()
+							result, err := model.Save()
 							if err != nil {
 								walk.MsgBox(mw, "Помилка збереження", err.Error(), walk.MsgBoxIconError)
 								return
 							}
 							msg := "Збережено."
-							if backupPath != "" {
-								msg = "Збережено. Резервна копія: " + backupPath
+							if result.BackupPath != "" {
+								msg += " Резервна копія: " + result.BackupPath
 							}
-							walk.MsgBox(mw, "Збереження", msg, walk.MsgBoxIconInformation)
+							icon := walk.MsgBoxIconInformation
+							if result.RootCopyPath != "" {
+								msg += "\nКопію в корені оновлено: " + result.RootCopyPath
+							}
+							if result.RootCopyErr != nil {
+								msg += "\n\nУВАГА: не вдалося оновити копію в корені: " + result.RootCopyErr.Error()
+								icon = walk.MsgBoxIconWarning
+							}
+							walk.MsgBox(mw, "Збереження", msg, icon)
 						},
 					},
 					PushButton{Text: "Закрити", OnClicked: func() { mw.Close() }},
