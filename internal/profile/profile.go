@@ -15,8 +15,8 @@ type Profile struct {
 }
 
 var registry = []Profile{
-	{Name: "bravo", DisplayName: "BRAVO (server)", FileHint: "bravo.ini"},
-	{Name: "bis", DisplayName: "BIS (client)", FileHint: "bis.ini"},
+	{Name: "bravo", DisplayName: "BRAVO (сервер)", FileHint: "bravo.ini"},
+	{Name: "bis", DisplayName: "BIS (клієнт)", FileHint: "bis.ini"},
 }
 
 // All returns every registered profile, in a stable, fixed order.

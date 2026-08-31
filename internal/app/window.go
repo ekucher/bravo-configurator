@@ -45,13 +45,13 @@ func chooseProfile() (profile.Profile, bool, error) {
 
 	_, err := Dialog{
 		AssignTo: &dlg,
-		Title:    "BRAVO/BIS Configurator",
+		Title:    "Конфігуратор BRAVO/BIS",
 		MinSize:  Size{Width: 360, Height: 160},
 		Layout:   VBox{},
 		Children: []Widget{
-			Label{Text: "Which configuration do you want to edit?"},
+			Label{Text: "Яку конфігурацію ви хочете редагувати?"},
 			PushButton{
-				Text: "BRAVO (server) — bravo.ini",
+				Text: "BRAVO (сервер) — bravo.ini",
 				OnClicked: func() {
 					selected, _ = profile.Find("bravo")
 					chosen = true
@@ -59,7 +59,7 @@ func chooseProfile() (profile.Profile, bool, error) {
 				},
 			},
 			PushButton{
-				Text: "BIS (client) — bis.ini",
+				Text: "BIS (клієнт) — bis.ini",
 				OnClicked: func() {
 					selected, _ = profile.Find("bis")
 					chosen = true
@@ -68,7 +68,7 @@ func chooseProfile() (profile.Profile, bool, error) {
 			},
 			VSpacer{},
 			PushButton{
-				Text:      "Cancel",
+				Text:      "Скасувати",
 				OnClicked: func() { dlg.Cancel() },
 			},
 		},
@@ -79,32 +79,15 @@ func chooseProfile() (profile.Profile, bool, error) {
 	return selected, chosen, nil
 }
 
-var encodingChoices = []string{"Auto-detect", "UTF-8", "UTF-8 (BOM)", "Windows-1251", "Windows-1252"}
-
-func encodingChoiceToValue(choice string) ini.Encoding {
-	switch choice {
-	case "UTF-8":
-		return ini.EncodingUTF8
-	case "UTF-8 (BOM)":
-		return ini.EncodingUTF8BOM
-	case "Windows-1251":
-		return ini.EncodingCP1251
-	case "Windows-1252":
-		return ini.EncodingCP1252
-	default:
-		return "" // Auto-detect
-	}
-}
-
 // chooseFile shows a native "open file" dialog defaulted to prof's
-// filename, then a small dialog to optionally override the detected text
-// encoding (see internal/ini's DetectAndDecode for the auto-detection
-// rules this overrides). ok is false if the operator cancelled either
-// step.
+// filename. The text encoding is always auto-detected (see internal/ini's
+// DetectAndDecode) — there is no GUI override; use --encoding on the CLI
+// --validate path if a legacy codepage ever needs to be forced. ok is
+// false if the operator cancelled.
 func chooseFile(prof profile.Profile) (path string, forceEncoding ini.Encoding, ok bool, err error) {
 	dlg := walk.FileDialog{
-		Title:  fmt.Sprintf("Open %s (%s)", prof.FileHint, prof.DisplayName),
-		Filter: "INI files (*.ini)|*.ini|All files (*.*)|*.*",
+		Title:  fmt.Sprintf("Відкрити %s (%s)", prof.FileHint, prof.DisplayName),
+		Filter: "INI-файли (*.ini)|*.ini|Усі файли (*.*)|*.*",
 	}
 	accepted, err := dlg.ShowOpen(nil)
 	if err != nil {
@@ -113,62 +96,18 @@ func chooseFile(prof profile.Profile) (path string, forceEncoding ini.Encoding, 
 	if !accepted {
 		return "", "", false, nil
 	}
-
-	choice, ok, err := chooseEncoding()
-	if err != nil {
-		return "", "", false, err
-	}
-	if !ok {
-		return "", "", false, nil
-	}
-	return dlg.FilePath, encodingChoiceToValue(choice), true, nil
-}
-
-func chooseEncoding() (string, bool, error) {
-	var dlg *walk.Dialog
-	var cb *walk.ComboBox
-	chosen := false
-
-	_, err := Dialog{
-		AssignTo: &dlg,
-		Title:    "Text encoding",
-		MinSize:  Size{Width: 320, Height: 140},
-		Layout:   VBox{},
-		Children: []Widget{
-			Label{Text: "Text encoding (leave Auto-detect unless you know this file uses a legacy codepage):"},
-			ComboBox{
-				AssignTo:     &cb,
-				Model:        encodingChoices,
-				CurrentIndex: 0,
-			},
-			Composite{
-				Layout: HBox{},
-				Children: []Widget{
-					HSpacer{},
-					PushButton{Text: "OK", OnClicked: func() { chosen = true; dlg.Accept() }},
-					PushButton{Text: "Cancel", OnClicked: func() { dlg.Cancel() }},
-				},
-			},
-		},
-	}.Run(nil)
-	if err != nil {
-		return "", false, err
-	}
-	if !chosen {
-		return "", false, nil
-	}
-	return encodingChoices[cb.CurrentIndex()], true, nil
+	return dlg.FilePath, "", true, nil
 }
 
 func openEditor(prof profile.Profile, filePath string, forceEncoding ini.Encoding) error {
 	doc, enc, err := ini.ReadFile(filePath, ini.DefaultParseOptions(), forceEncoding)
 	if err != nil {
-		walk.MsgBox(nil, "Read error", err.Error(), walk.MsgBoxIconError)
+		walk.MsgBox(nil, "Помилка читання", err.Error(), walk.MsgBoxIconError)
 		return err
 	}
 	s, err := prof.LoadSchema()
 	if err != nil {
-		walk.MsgBox(nil, "Schema error", err.Error(), walk.MsgBoxIconError)
+		walk.MsgBox(nil, "Помилка схеми", err.Error(), walk.MsgBoxIconError)
 		return err
 	}
 	model := NewFormModel(prof, s, doc, enc, filePath)
@@ -228,11 +167,15 @@ func runEditorWindow(model *FormModel) error {
 		pages = append(pages, buildSectionTab(model, sec, statusLabels, refresh))
 	}
 
-	banner := fmt.Sprintf("%s — %s  [schema: %s]", model.Profile.DisplayName, model.FilePath, strings.ToUpper(string(model.Schema.Status)))
+	statusLabel := "чернетка"
+	if model.Schema.Status == schema.StatusVerified {
+		statusLabel = "перевірена"
+	}
+	banner := fmt.Sprintf("%s — %s  [схема: %s]", model.Profile.DisplayName, model.FilePath, statusLabel)
 
 	_, err := MainWindow{
 		AssignTo: &mw,
-		Title:    "BRAVO/BIS Configurator",
+		Title:    "Конфігуратор BRAVO/BIS",
 		MinSize:  Size{Width: 720, Height: 520},
 		Layout:   VBox{},
 		Children: []Widget{
@@ -245,22 +188,22 @@ func runEditorWindow(model *FormModel) error {
 					HSpacer{},
 					PushButton{
 						AssignTo: &saveButton,
-						Text:     "Save",
+						Text:     "Зберегти",
 						Enabled:  model.CanSave(),
 						OnClicked: func() {
 							backupPath, err := model.Save()
 							if err != nil {
-								walk.MsgBox(mw, "Save failed", err.Error(), walk.MsgBoxIconError)
+								walk.MsgBox(mw, "Помилка збереження", err.Error(), walk.MsgBoxIconError)
 								return
 							}
-							msg := "Saved."
+							msg := "Збережено."
 							if backupPath != "" {
-								msg = "Saved. Backup: " + backupPath
+								msg = "Збережено. Резервна копія: " + backupPath
 							}
-							walk.MsgBox(mw, "Save", msg, walk.MsgBoxIconInformation)
+							walk.MsgBox(mw, "Збереження", msg, walk.MsgBoxIconInformation)
 						},
 					},
-					PushButton{Text: "Close", OnClicked: func() { mw.Close() }},
+					PushButton{Text: "Закрити", OnClicked: func() { mw.Close() }},
 				},
 			},
 		},
@@ -278,7 +221,7 @@ func summaryText(model *FormModel) string {
 			warnings++
 		}
 	}
-	return fmt.Sprintf("Errors: %d   Warnings: %d", errors, warnings)
+	return fmt.Sprintf("Помилок: %d   Попереджень: %d", errors, warnings)
 }
 
 func setFieldStatusLabel(lbl *walk.Label, f FieldView) {
@@ -287,9 +230,9 @@ func setFieldStatusLabel(lbl *walk.Label, f FieldView) {
 		return
 	}
 	r := f.Findings[0]
-	prefix := "WARNING"
+	prefix := "ПОПЕРЕДЖЕННЯ"
 	if r.Severity == schema.SeverityError {
-		prefix = "ERROR"
+		prefix = "ПОМИЛКА"
 	}
 	lbl.SetText(fmt.Sprintf("[%s] %s", prefix, r.Message))
 }

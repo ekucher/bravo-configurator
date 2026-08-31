@@ -115,11 +115,14 @@ environment). Before relying on this tool on an old-Windows deployment:
 Win32 display). After building, manually verify:
 
 1. Launch `configurator.exe` with no arguments — the profile-selection
-   dialog appears.
-2. Pick "BRAVO (server)" — the file-open dialog appears, defaulted to
+   dialog appears (Ukrainian UI text).
+2. Pick "BRAVO (сервер)" — the file-open dialog appears, defaulted to
    `bravo.ini`.
-3. Open a real (or the schema-shaped example) `bravo.ini` — the encoding
-   dialog appears; accept "Auto-detect".
+3. Open a real (or the schema-shaped example) `bravo.ini` — the editor
+   opens directly; text encoding is always auto-detected, there is no
+   GUI override (pass `--encoding` on the CLI `--validate` path if a
+   legacy codepage ever needs to be forced — see `chooseFile`'s doc
+   comment in `window.go`).
 4. The editor window opens with one tab per section; confirm the `[model]`
    tab shows `MODEL`/`BLOG`/`BEXCH` with their current values.
 5. Clear the `MODEL` field — confirm its status label shows a required-field

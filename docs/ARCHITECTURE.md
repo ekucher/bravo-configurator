@@ -112,7 +112,8 @@ renders all 5 tabs with correct field widgets and an
 ```
 operator picks profile ("bravo"/"bis")
   -> profile.Find returns Profile{Name, DisplayName, FileHint}
-operator picks a file (+ optional encoding override)
+operator picks a file (text encoding is always auto-detected; no GUI
+override — pass --encoding on the CLI --validate path to force one)
   -> ini.ReadFile(path, opts, forceEncoding) -> (*ini.Document, ini.Encoding)
   -> profile.LoadSchema() / schema.Load(customPath) -> *schema.Schema
   -> app.NewFormModel(profile, schema, doc, encoding, path) -> *FormModel
