@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.11" />
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Bundled DRAFT default schemas, embedded into the compiled assembly
+         (mirrors internal/schema/loader.go's go:embed) so the tool is
+         self-contained at runtime. LogicalName is fixed explicitly so
+         Schema/Loader.cs can look them up predictably regardless of default
+         resource-naming conventions. -->
+    <EmbeddedResource Include="Schema\Defaults\bravo.schema.yaml">
+      <LogicalName>BravoBisConfigurator.Core.Schema.Defaults.bravo.schema.yaml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Schema\Defaults\bis.schema.yaml">
+      <LogicalName>BravoBisConfigurator.Core.Schema.Defaults.bis.schema.yaml</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

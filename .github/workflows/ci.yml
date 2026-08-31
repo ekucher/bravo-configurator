@@ -8,44 +8,30 @@ on:
 
 jobs:
   build-and-test:
-    # lxn/walk (internal/app, cmd/configurator) is Windows-only; a
-    # non-Windows runner cannot even compile internal/app.
+    # BravoBisConfigurator.App targets net8.0-windows/UseWindowsForms and
+    # only builds on Windows.
     runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-dotnet@v4
         with:
-          go-version-file: go.mod
+          dotnet-version: "8.0.x"
 
-      - name: go vet
-        run: go vet ./...
+      - name: dotnet restore
+        run: dotnet restore BravoBisConfigurator.sln
 
-      - name: gofmt (repo-owned files only)
-        # third_party/walk is a vendored, minimally-patched upstream
-        # copy of github.com/lxn/walk (see docs/BUILDING.md) and is
-        # intentionally left as upstream formatted it, except for the
-        # one patched line in tooltip.go — do not gofmt-check it here.
-        shell: bash
-        run: |
-          files=$(gofmt -l . | grep -v '^third_party/walk/' || true)
-          if [ -n "$files" ]; then
-            echo "gofmt found unformatted files:"
-            echo "$files"
-            exit 1
-          fi
+      - name: dotnet build
+        run: dotnet build BravoBisConfigurator.sln -c Release --no-restore
 
-      - name: go test
-        run: go test ./...
+      - name: dotnet test
+        run: dotnet test BravoBisConfigurator.sln -c Release --no-build
 
-      - name: build (console)
-        run: go build ./...
-
-      - name: build (release, windowsgui)
-        run: go build -ldflags="-H windowsgui -s -w" -o configurator.exe ./cmd/configurator
+      - name: publish (self-contained single-file)
+        run: dotnet publish src/BravoBisConfigurator.App/BravoBisConfigurator.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 
       - uses: actions/upload-artifact@v4
         with:
           name: configurator-exe
-          path: configurator.exe
+          path: publish/BravoBisConfigurator.App.exe

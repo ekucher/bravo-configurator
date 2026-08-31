@@ -1,0 +1,373 @@
+# bis.ini — schema derived from a real production sample supplied by the
+# operator (example-configs/bis.ini), not from vendor documentation. As
+# with bravo.schema.yaml, semantics are inferred from the sample's own
+# structure and comments; a single real sample is not an authoritative
+# spec, so numeric/enum interpretations are severity: warning while
+# structural facts (a field exists, its basic type) are severity: error
+# only for the small set of paths this tool can meaningfully check.
+#
+# NOT modeled here: the sample includes at least one dynamically-named
+# per-dialog window-state section (observed: "[lims.DlgFndDirectDepart_F]"
+# with timer/columns/Width/Height keys). Real installations likely contain
+# many such sections (one per UI dialog the operator has resized/moved).
+# These are intentionally left unmodeled — the validation engine's
+# "unrecognized section/key" warning already preserves and reports them
+# without requiring an exhaustive, ever-growing list of dialog names here.
+profile: bis
+version: "0.2.0"
+status: verified
+sections:
+  - name: model
+    label: "Model / Storage Paths"
+    fields:
+      - key: model
+        label: "Model project path"
+        type: path
+        required: true
+        validation: { kind: path-exists, path_mode: either, severity: warning }
+        description: >-
+          Active in the sample, given as a path relative to the client
+          install directory (e.g. "MODEL\\lims"); severity is warning
+          rather than error because a relative path cannot be checked for
+          existence without knowing the install directory.
+      - key: model1
+        label: "Additional model path #1"
+        type: path
+        required: false
+        description: >-
+          Active in the sample. The sample shows a numbered "model",
+          "model1" pair; further "model2", "model3", ... may exist on other
+          installations and will surface as an unrecognized (but preserved)
+          key if present, rather than being individually declared here.
+      - key: CLASSPATH
+        label: "Java classpath"
+        type: string
+        required: false
+        description: "Semicolon-separated list of .zip/.jar paths. Active in the sample."
+      - key: MDCHECKOPEN
+        label: "Check open model"
+        type: bool
+        required: false
+        description: "Active in the sample (value 0); see bravo.ini's MDCHECKOPEN for the server-side equivalent."
+      - key: BLOG
+        label: "BLOG directory"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+      - key: MDCHECKUPDATE
+        label: "Check update model"
+        type: bool
+        required: false
+        description: "Commented out (bare key, no value) in the sample; see bravo.ini's MDCHECKUPDATE for the server-side equivalent."
+      - key: BHTML
+        label: "BHTML directory"
+        type: path
+        required: false
+        description: "Commented out in the sample."
+
+  - name: debug
+    label: "Debug / Trace"
+    fields:
+      - key: TRACE_LEVEL
+        label: "Trace level bitmask"
+        type: string
+        required: false
+        validation: { kind: regex, pattern: "^[0-9A-Fa-f]+$", severity: warning }
+        description: "Hex bitmask, same convention as bravo.ini's [Debug] TRACE_LEVEL. Active in the sample (value ffffffff)."
+      - key: FILE
+        label: "Trace log file"
+        type: path
+        required: false
+        description: "May be relative (resolved against the executable's own directory) or absolute; not validated for existence here for that reason. Active in the sample (observed as TraceBis.out — this is the same 'BIS' trace source name referenced by BRAVO-Toolkit's BISSourcePath/TraceBIS.out log-rotation handling, confirming this file corresponds to the client this tool's request called \"bis\")."
+
+  - name: application
+    label: "Application"
+    fields:
+      - key: rtfprint
+        label: "RTF print mode"
+        type: string
+        required: false
+        description: "Commented out in the sample (value shown: shell)."
+      - key: dirout
+        label: "Output directory"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+      - key: rtfedit
+        label: "RTF editor command"
+        type: string
+        required: false
+        description: "External editor command with a \"%s\" placeholder for the file path. Active in the sample."
+      - key: tbledit
+        label: "Table editor command"
+        type: string
+        required: false
+        description: "External editor command with a \"%s\" placeholder for the file path. Active in the sample."
+
+  - name: net
+    label: "Network / Users"
+    description: >-
+      The sample lists a numbered "user".."user20" family (21 slots, most
+      empty) plus a single "host". Declared individually below since the
+      count (21) is directly observed, but a real installation with more
+      slots would surface any additional userN as an unrecognized
+      (preserved) key rather than failing.
+    fields:
+      - key: user
+        label: "User slot 0"
+        type: string
+        required: false
+        description: "Active in the sample."
+      - key: user1
+        label: "User slot 1"
+        type: string
+        required: false
+        description: "Active in the sample."
+      - key: user2
+        label: "User slot 2"
+        type: string
+        required: false
+      - key: user3
+        label: "User slot 3"
+        type: string
+        required: false
+      - key: user4
+        label: "User slot 4"
+        type: string
+        required: false
+      - key: user5
+        label: "User slot 5"
+        type: string
+        required: false
+      - key: user6
+        label: "User slot 6"
+        type: string
+        required: false
+      - key: user7
+        label: "User slot 7"
+        type: string
+        required: false
+      - key: user8
+        label: "User slot 8"
+        type: string
+        required: false
+      - key: user9
+        label: "User slot 9"
+        type: string
+        required: false
+      - key: user10
+        label: "User slot 10"
+        type: string
+        required: false
+      - key: user11
+        label: "User slot 11"
+        type: string
+        required: false
+      - key: user12
+        label: "User slot 12"
+        type: string
+        required: false
+      - key: user13
+        label: "User slot 13"
+        type: string
+        required: false
+      - key: user14
+        label: "User slot 14"
+        type: string
+        required: false
+      - key: user15
+        label: "User slot 15"
+        type: string
+        required: false
+      - key: user16
+        label: "User slot 16"
+        type: string
+        required: false
+      - key: user17
+        label: "User slot 17"
+        type: string
+        required: false
+      - key: user18
+        label: "User slot 18"
+        type: string
+        required: false
+      - key: user19
+        label: "User slot 19"
+        type: string
+        required: false
+      - key: user20
+        label: "User slot 20"
+        type: string
+        required: false
+      - key: host
+        label: "Server host"
+        type: string
+        required: false
+        description: "Active in the sample (value: localhost)."
+
+  - name: init
+    label: "Init"
+    description: "Observed empty (no keys) in the sample."
+    fields: []
+
+  - name: settings
+    label: "Settings"
+    description: "Observed empty (no keys) in the sample."
+    fields: []
+
+  - name: scan
+    label: "Scan"
+    fields:
+      - key: pthScanLocal
+        label: "Local scan path"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+      - key: dirhtml
+        label: "HTML directory"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+      - key: dirtemp
+        label: "Temp directory"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+      - key: ext
+        label: "Scan file extension"
+        type: string
+        required: false
+        validation: { kind: regex, pattern: "^\\.[A-Za-z0-9]+$", severity: warning }
+        description: "Active in the sample (value: .jpg)."
+      - key: editPDF
+        label: "PDF editor command"
+        type: string
+        required: false
+        description: "Commented out in the sample."
+      - key: editJPG
+        label: "JPG editor command"
+        type: string
+        required: false
+        description: "Commented out in the sample."
+      - key: autoJPG
+        label: "Auto-JPG setting"
+        type: string
+        required: false
+        description: "Active in the sample, empty value."
+
+  - name: foto
+    label: "Photo"
+    fields:
+      - key: pathin
+        label: "Photo input path"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+
+  - name: config
+    label: "Configuration"
+    fields:
+      - key: defuser
+        label: "Default user"
+        type: string
+        required: false
+        description: "Active in the sample, empty value."
+      - key: defwork
+        label: "Default workplace"
+        type: string
+        required: false
+        description: "Active in the sample, empty value."
+      - key: birthday
+        label: "Birthday reminder"
+        type: string
+        required: false
+        description: "Active in the sample, empty value."
+      - key: checkApp
+        label: "Check application updates"
+        type: enum
+        required: false
+        validation: { kind: enum, values: ["on", "off"], severity: warning }
+        description: "Active in the sample (value: off)."
+      - key: checkAppDays
+        label: "Check-application interval (days)"
+        type: int
+        required: false
+        validation: { kind: range, min: 0, severity: warning }
+        description: "Active in the sample (value: 10)."
+      - key: check
+        label: "Check setting"
+        type: string
+        required: false
+        description: "Active in the sample, empty value."
+      - key: startRemind
+        label: "Startup reminder"
+        type: enum
+        required: false
+        validation: { kind: enum, values: ["on", "off"], severity: warning }
+        description: "Active in the sample (value: off)."
+      - key: identYear
+        label: "Identify year"
+        type: enum
+        required: false
+        validation: { kind: enum, values: ["on", "off"], severity: warning }
+        description: "Active in the sample (value: on)."
+
+  - name: obmin
+    label: "Obmin (exchange module)"
+    fields:
+      - key: tracerCols
+        label: "Tracer column widths"
+        type: string
+        required: false
+        validation: { kind: regex, pattern: "^[0-9]+(,[0-9]+)*$", severity: warning }
+        description: "Comma-separated list of column widths. Active in the sample (value: 200,300,300)."
+      - key: pthWork
+        label: "Work directory"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+      - key: pthArchiv
+        label: "Archive directory"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+
+  - name: assort
+    label: "Assort (exchange module)"
+    description: "Same field shape as [obmin] in the observed sample."
+    fields:
+      - key: pthWork
+        label: "Work directory"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+      - key: pthArchiv
+        label: "Archive directory"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+
+  - name: export
+    label: "Export"
+    fields:
+      - key: pthWorkLocal
+        label: "Local work path"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+      - key: pthExportInvoice
+        label: "Invoice export path (UNC)"
+        type: string
+        required: false
+        description: "Active in the sample, a UNC path (e.g. \\\\server\\share\\); not validated as path-exists since UNC availability depends on network state at validation time."

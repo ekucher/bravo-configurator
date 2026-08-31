@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1357575F-E00F-49E3-B99D-C5E95E1ADFBF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BravoBisConfigurator.Core", "src\BravoBisConfigurator.Core\BravoBisConfigurator.Core.csproj", "{DC508096-44CB-4DB2-B866-7D56E9D3F55E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BravoBisConfigurator.App", "src\BravoBisConfigurator.App\BravoBisConfigurator.App.csproj", "{805C022E-F17B-4C19-B29C-C310622CF1E2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{3276D6A0-7D68-42EA-A584-131E81F0C50F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BravoBisConfigurator.Core.Tests", "tests\BravoBisConfigurator.Core.Tests\BravoBisConfigurator.Core.Tests.csproj", "{CDBA3256-5157-4429-9C36-D74066C479B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BravoBisConfigurator.App.Tests", "tests\BravoBisConfigurator.App.Tests\BravoBisConfigurator.App.Tests.csproj", "{298ADBA0-21B8-4255-90BA-2C1A3ED95D95}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DC508096-44CB-4DB2-B866-7D56E9D3F55E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC508096-44CB-4DB2-B866-7D56E9D3F55E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC508096-44CB-4DB2-B866-7D56E9D3F55E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC508096-44CB-4DB2-B866-7D56E9D3F55E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{805C022E-F17B-4C19-B29C-C310622CF1E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{805C022E-F17B-4C19-B29C-C310622CF1E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{805C022E-F17B-4C19-B29C-C310622CF1E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{805C022E-F17B-4C19-B29C-C310622CF1E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CDBA3256-5157-4429-9C36-D74066C479B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDBA3256-5157-4429-9C36-D74066C479B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDBA3256-5157-4429-9C36-D74066C479B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDBA3256-5157-4429-9C36-D74066C479B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{298ADBA0-21B8-4255-90BA-2C1A3ED95D95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{298ADBA0-21B8-4255-90BA-2C1A3ED95D95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{298ADBA0-21B8-4255-90BA-2C1A3ED95D95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{298ADBA0-21B8-4255-90BA-2C1A3ED95D95}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DC508096-44CB-4DB2-B866-7D56E9D3F55E} = {1357575F-E00F-49E3-B99D-C5E95E1ADFBF}
+		{805C022E-F17B-4C19-B29C-C310622CF1E2} = {1357575F-E00F-49E3-B99D-C5E95E1ADFBF}
+		{CDBA3256-5157-4429-9C36-D74066C479B0} = {3276D6A0-7D68-42EA-A584-131E81F0C50F}
+		{298ADBA0-21B8-4255-90BA-2C1A3ED95D95} = {3276D6A0-7D68-42EA-A584-131E81F0C50F}
+	EndGlobalSection
+EndGlobal

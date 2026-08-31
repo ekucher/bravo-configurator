@@ -1,4 +1,7 @@
-/bin/
+bin/
+obj/
+publish/
+*.user
 /dist/
 *.exe
 *.test
@@ -9,5 +12,5 @@
 # Real bravo.ini/bis.ini samples supplied by the operator for schema
 # derivation. These reveal real internal LIMS paths/usernames/hostnames —
 # never commit them. The derived, sanitized schema lives in
-# internal/schema/defaults/*.schema.yaml instead.
+# src/BravoBisConfigurator.Core/Schema/Defaults/*.schema.yaml instead.
 /example-configs/
