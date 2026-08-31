@@ -21,36 +21,40 @@ does not depend on its code. BRAVO-Toolkit only ever *reads* `bravo.ini`
   path existence, enums, numeric ranges), showing errors and warnings
   inline.
 - Lets you edit recognized fields through a generated form, grouped by
-  section.
+  section, in a real WinForms UI (field rows are generated at load time
+  from the schema; the surrounding chrome — profile picker, banner,
+  Save/Close — is a plain Windows Forms Designer layout).
 - Backs up the file (timestamped `.bak`) and writes atomically before
   overwriting anything.
-- Also works headlessly: `configurator.exe --validate --profile bravo
-  --file C:\path\bravo.ini` for scripted/CI checks, no GUI required.
+- Also works headlessly: `BravoBisConfigurator.App.exe --validate
+  --profile bravo --file C:\path\bravo.ini` for scripted/CI checks, no
+  GUI required.
 
 ## Schema status — read before trusting validation results
 
-The bundled schemas (`internal/schema/defaults/*.schema.yaml`) were derived
-from **one real sample of each file**, supplied by the tool's operator, not
-from official vendor documentation. See [docs/SCHEMA_STATUS.md](docs/SCHEMA_STATUS.md)
-for exactly what is and isn't verified, and how to correct the schema
-against your own installation without recompiling.
+The bundled schemas
+(`src/BravoBisConfigurator.Core/Schema/Defaults/*.schema.yaml`) were
+derived from **one real sample of each file**, supplied by the tool's
+operator, not from official vendor documentation. See
+[docs/SCHEMA_STATUS.md](docs/SCHEMA_STATUS.md) for exactly what is and
+isn't verified, and how to correct the schema against your own
+installation without recompiling.
 
 ## Building
 
-See [docs/BUILDING.md](docs/BUILDING.md). Short version: this is a normal
-Go module, built with the standard toolchain — no C compiler required
-(the GUI uses [lxn/walk](https://github.com/lxn/walk), a pure-Go Win32
-toolkit, deliberately chosen over Fyne so the whole project builds and
-tests with nothing beyond `go build`/`go test`).
+See [docs/BUILDING.md](docs/BUILDING.md). Short version: this is a
+.NET 8 solution (`BravoBisConfigurator.sln`) with a WinForms UI —
+Windows is the only supported build/run target.
 
 ```
-go build -ldflags="-H windowsgui -s -w" -o configurator.exe ./cmd/configurator
+dotnet publish src/BravoBisConfigurator.App/BravoBisConfigurator.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 ```
 
-The result is a single portable `.exe` with no runtime dependencies beyond
-stock Windows system DLLs.
+The result is a single self-contained `.exe` (no .NET install required on
+the target machine, at the cost of a larger binary — see BUILDING.md for
+the size trade-off).
 
 ## Architecture
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the package layout and
-data flow.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the project layout
+and data flow.

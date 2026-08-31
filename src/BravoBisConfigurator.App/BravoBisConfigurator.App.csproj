@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\BravoBisConfigurator.Core\BravoBisConfigurator.Core.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- CliRunner is internal — exposed to the test project only, matching
+         cmd/configurator/main_test.go's same-package access to run(). -->
+    <InternalsVisibleTo Include="BravoBisConfigurator.App.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,7 +1,7 @@
 # Schema status
 
-The field catalogs in `internal/schema/defaults/bravo.schema.yaml` and
-`internal/schema/defaults/bis.schema.yaml` drive both the validation engine
+The field catalogs in `src/BravoBisConfigurator.Core/Schema/Defaults/bravo.schema.yaml` and
+`src/BravoBisConfigurator.Core/Schema/Defaults/bis.schema.yaml` drive both the validation engine
 and the GUI form generator. This document says exactly what evidence they
 are and aren't based on, so nobody mistakes "the tool didn't complain"
 for "this file is definitely correct."
@@ -80,8 +80,8 @@ future revision.
 
 No code changes are needed to fix or extend either schema:
 
-1. Edit `internal/schema/defaults/bravo.schema.yaml` or `bis.schema.yaml`
-   directly (these are compiled into the binary via `go:embed`) and
+1. Edit `src/BravoBisConfigurator.Core/Schema/Defaults/bravo.schema.yaml` or `bis.schema.yaml`
+   directly (these are compiled into the binary as embedded resources) and
    rebuild, **or**
 2. Point the tool at a corrected schema file on disk without rebuilding:
    `configurator.exe --validate --profile bravo --file bravo.ini --schema
