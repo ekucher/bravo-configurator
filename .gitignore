@@ -3,6 +3,7 @@
 *.exe
 *.test
 *.out
+*.log
 .DS_Store
 
 # Real bravo.ini/bis.ini samples supplied by the operator for schema

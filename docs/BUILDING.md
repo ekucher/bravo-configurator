@@ -11,6 +11,36 @@
   `GOOS=linux`/`GOOS=darwin` will fail to compile the `internal/app`
   package.
 
+## Required: embedded manifest (`cmd/configurator/rsrc.syso`)
+
+`cmd/configurator/rsrc.syso` is checked into the repository and picked up
+automatically by `go build` (Go links any `*.syso` file found in the main
+package directory). **Do not delete it** — without it, `lxn/walk`'s
+`MainWindow`/`Dialog` creation crashes on Windows 11 with `panic: TTM_ADDTOOL
+failed` (a real, empirically-confirmed bug: [lxn/walk#805](https://github.com/lxn/walk/issues/805),
+still open upstream as of writing). The fix is a Common-Controls-v6
+application manifest — but it must be **embedded as a PE resource**, not
+placed as a side-by-side `configurator.exe.manifest` file next to the
+`.exe` (that was tried first and did not fix the crash; see
+[lxn/walk#733](https://github.com/lxn/walk/issues/733), where the same
+"solved" fix was embedding, not a sidecar file).
+
+If you ever need to regenerate `rsrc.syso` (e.g. after changing DPI
+awareness or execution-level settings in the manifest):
+
+```sh
+go install github.com/akavel/rsrc@latest
+rsrc -manifest configurator.exe.manifest -o cmd/configurator/rsrc.syso
+```
+
+(`akavel/rsrc` is the module's real import path; `tc-hib/rsrc`, sometimes
+referenced online as a fork, currently fails `go install` because its
+`go.mod` still declares the `akavel/rsrc` module path.) Keep a
+`configurator.exe.manifest` source file alongside the repo root while
+regenerating, then remove it again — only the compiled `rsrc.syso` needs
+to be committed; a side-by-side `.manifest` file left next to the built
+`.exe` is not required and was not what fixed the crash.
+
 ## Build
 
 ```sh
@@ -36,11 +66,13 @@ go build -ldflags="-H windowsgui -s -w" -o configurator.exe ./cmd/configurator
 - The result has no runtime dependencies beyond stock Windows system DLLs
   — copy the single `.exe` anywhere and run it.
 
-## Old-Windows compatibility
+## Windows compatibility
 
-Not verified against a real Windows 7/8 machine as part of this work (none
-was available in the build environment). Before relying on this tool on an
-old-Windows deployment:
+Empirically verified on Windows 11 (build 10.0.26200): the GUI launches,
+the profile-selection dialog renders correctly, and the process stays
+running (no crash) — this required the embedded-manifest fix above; do
+not skip it. Not verified on Windows 7/8 (none was available in the build
+environment). Before relying on this tool on an old-Windows deployment:
 
 1. Confirm the pinned Go toolchain version in `go.mod` still supports
    building for your target — Go periodically drops support for building
