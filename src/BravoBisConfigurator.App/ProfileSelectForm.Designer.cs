@@ -84,6 +84,10 @@ partial class ProfileSelectForm
         this.layoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
         this.layoutPanel.Padding = new System.Windows.Forms.Padding(16);
         this.layoutPanel.RowCount = 4;
+        this.layoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
+        this.layoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
+        this.layoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
+        this.layoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
         this.layoutPanel.Name = "layoutPanel";
         //
         // ProfileSelectForm

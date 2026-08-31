@@ -1,6 +1,7 @@
 bin/
 obj/
 publish/
+.vs/
 *.user
 /dist/
 *.exe
