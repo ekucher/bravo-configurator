@@ -1,0 +1,4 @@
+# This tool's entire purpose is byte-exact INI round-tripping, including
+# CRLF/LF line endings. Disable any line-ending normalization so Git never
+# silently rewrites test fixtures or checked-in files.
+* -text

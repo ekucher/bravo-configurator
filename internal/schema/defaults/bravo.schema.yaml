@@ -1,0 +1,346 @@
+# bravo.ini — schema derived from a real production sample supplied by the
+# operator (example-configs/bravo.ini), not from vendor documentation. Field
+# types/enums/ranges are inferred from that file's own extensive inline
+# comments (which double as informal documentation of valid values) plus
+# which keys were actually active (uncommented) vs. merely shown as
+# commented-out examples. See docs/SCHEMA_STATUS.md for what "verified"
+# means here: a single real sample + its own comments, not an authoritative
+# spec from the LIMS/BRAVO vendor. Numeric/enum semantics inferred purely
+# from comments are marked severity: warning; only structural facts (a
+# field exists, its basic type, and that certain path fields were active in
+# the sample) are severity: error.
+profile: bravo
+version: "0.2.0"
+status: verified
+sections:
+  - name: system
+    label: "System / Database Engine"
+    description: >-
+      Low-level database-engine tuning. Most keys were commented out
+      (defaults marked with * in the sample's own comments) in the
+      supplied sample; only DBMEMLIMIT, BMTMAXTHREAD, BMTWAITCRITICAL,
+      BMTWAITSYNC, BMTWAITSYNCCOUNT, BMTWAITLOCK and MEMSTACKSIZE were
+      actually active.
+    fields:
+      - key: DBOPENMODE
+        label: "DB open mode"
+        type: enum
+        required: false
+        validation: { kind: enum, values: ["0", "1", "2"], severity: warning }
+        description: "DB_O_UPDATE=0 (default), DB_O_RDONLY=1, DB_O_VIRTUAL=2. Commented out in the sample."
+      - key: DBSYNCMODE
+        label: "DB sync mode"
+        type: enum
+        required: false
+        validation: { kind: enum, values: ["0", "1", "2"], severity: warning }
+        description: "DB_SYNC_WRITE=0, DB_SYNC_FLUSH=1 (default), DB_SYNC_COMMIT=2. Commented out in the sample."
+      - key: DBFILELIMIT
+        label: "DB file limit"
+        type: int
+        required: false
+        description: "0 = close always, -1 (default) = unlimited. Commented out in the sample."
+      - key: DBMEMTIME
+        label: "DB memory release time (s)"
+        type: int
+        required: false
+        description: "10 (default) = time-based release, 0 = always. Commented out in the sample."
+      - key: DBMEMLIMIT
+        label: "DB memory limit (MB)"
+        type: int
+        required: false
+        description: "0 = close always, -1 (default) = unlimited. Active in the sample (value 0)."
+      - key: DBMEMFREE
+        label: "DB memory free-counters mode"
+        type: int
+        required: false
+        description: "0 (default) = free counters == 0, -1 = free counters < mid, >0 = free percent from max counters. Commented out in the sample."
+      - key: DBLOG
+        label: "Transaction log file"
+        type: string
+        required: false
+        description: "Transaction log filename, e.g. bravo.mlg. Commented out in the sample."
+      - key: BMTMAXTHREAD
+        label: "Max worker threads"
+        type: int
+        required: false
+        validation: { kind: range, min: 0, severity: warning }
+        description: "0 = single thread. Active in the sample (value 8)."
+      - key: BMTWAITSTART
+        label: "Thread start wait (ms)"
+        type: int
+        required: false
+        description: "Default 1 ms. Commented out in the sample."
+      - key: BMTWAITSTOP
+        label: "Thread stop wait (ms)"
+        type: int
+        required: false
+        description: "Default 3000 ms. Commented out in the sample."
+      - key: BMTWAITTERMINATE
+        label: "Thread terminate wait (ms)"
+        type: int
+        required: false
+        description: "Default 6000 ms. Commented out in the sample."
+      - key: BMTWAITPOOL
+        label: "Thread pool recycle wait (ms)"
+        type: int
+        required: false
+        description: "Default 5000 ms. Commented out in the sample."
+      - key: BMTWAITCRITICAL
+        label: "Critical-operation wait (ms)"
+        type: int
+        required: false
+        description: "1000 * BMTWAITSYNCCOUNT by convention. Active in the sample (value 10000)."
+      - key: BMTWAITSYNC
+        label: "Sync wait (ms)"
+        type: int
+        required: false
+        description: "100 * BMTWAITSYNCCOUNT by convention. Active in the sample (value 200)."
+      - key: BMTWAITSYNCCOUNT
+        label: "Sync wait-call count"
+        type: int
+        required: false
+        description: "Default 10. Active in the sample (value 1000)."
+      - key: BMTWAITLOCK
+        label: "Wait-lock timeout (ms)"
+        type: int
+        required: false
+        description: "500 * BMTWAITLOCKCOUNT by convention. Active in the sample (value 1000)."
+      - key: BMTWAITCLIENT
+        label: "Client pool wait (ms)"
+        type: int
+        required: false
+        description: "1 * BMTWAITCLIENTCOUNT by convention, default 1. Commented out in the sample."
+      - key: BMTWAITCLIENTCOUNT
+        label: "Client pool wait-call count"
+        type: int
+        required: false
+        description: "Default 100. Commented out in the sample."
+      - key: MEMSTACKSIZE
+        label: "Memory stack size"
+        type: int
+        required: false
+        description: "0 = malloc, >0 = StackAlloc (count of stack pointer). Active in the sample (value 1048575)."
+
+  - name: archiv
+    label: "Archive command hooks"
+    description: >-
+      External archiver invocation templates ("%s" placeholders). Entirely
+      commented out in the supplied sample — shown as arj.exe/rar.exe
+      examples — so nothing here is confirmed active.
+    fields:
+      - key: dir
+        label: "Archive directory"
+        type: path
+        required: false
+        description: "Default .\\ARCHIV\\. Commented out in the sample."
+      - key: create
+        label: "Create-archive command"
+        type: string
+        required: false
+        description: "External command template, e.g. arj.exe/rar.exe. Commented out in the sample."
+      - key: compress
+        label: "Compress command"
+        type: string
+        required: false
+        description: "External command template. Commented out in the sample."
+      - key: restore
+        label: "Restore/extract command"
+        type: string
+        required: false
+        description: "External command template. Commented out in the sample."
+      - key: test
+        label: "Test-archive command"
+        type: string
+        required: false
+        description: "External command template. Commented out in the sample."
+
+  - name: model
+    label: "Model / Storage Paths"
+    description: >-
+      Paths consumed by BRAVO-Toolkit's own read-only discovery
+      (modules/BRAVO.Discovery/BRAVO.Discovery.psm1) for MODEL/BLOG/BEXCH;
+      the remaining path keys (PHOTO, SCAN, CHAT, CLASSPATH, DIROUT, BHTML)
+      are additional LIMS storage locations confirmed only by this sample.
+    fields:
+      - key: MDUSER
+        label: "Server user id"
+        type: int
+        required: false
+        description: "Userid for Server. Commented out in the sample."
+      - key: MDNOTIFY
+        label: "Lock-wait notify on client"
+        type: bool
+        required: false
+        description: "Commented out in the sample."
+      - key: MDCHECKOPEN
+        label: "Check open model"
+        type: bool
+        required: false
+        description: "0 = don't check open model, 1 (default) = check. Active in the sample (value 0)."
+      - key: MDCHECKUPDATE
+        label: "Check update model"
+        type: bool
+        required: false
+        description: "0 = don't check update model, 1 (default) = check. Active in the sample (value 0)."
+      - key: MDJAVAINIT
+        label: "Initialize Java"
+        type: bool
+        required: false
+        description: "1 (default) = init java, 0 = don't use java. Commented out in the sample."
+      - key: MDJAVACLEAR
+        label: "Run Java GC after javaclear"
+        type: int
+        required: false
+        description: "Commented out in the sample; default shown as -1."
+      - key: MODEL
+        label: "Model project path"
+        type: path
+        required: true
+        validation: { kind: path-exists, path_mode: either, severity: error }
+        description: "Active in the sample. BRAVO-Toolkit's confirmed bravo.ini reader treats this key the same way."
+      - key: BLOG
+        label: "BLOG directory"
+        type: path
+        required: true
+        validation: { kind: path-exists, path_mode: dir, severity: error }
+        description: "Active in the sample."
+      - key: PHOTO
+        label: "Photo directory"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+      - key: SCAN
+        label: "Scan directory"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+      - key: DIROUT
+        label: "Output directory"
+        type: path
+        required: false
+        description: "Commented out in the sample."
+      - key: CHAT
+        label: "Chat directory"
+        type: path
+        required: false
+        validation: { kind: path-exists, path_mode: dir, severity: warning }
+        description: "Active in the sample."
+      - key: BHTML
+        label: "BHTML directory"
+        type: path
+        required: false
+        description: "Commented out in the sample."
+      - key: CLASSPATH
+        label: "Java classpath"
+        type: string
+        required: false
+        description: "Semicolon-separated list of .zip/.jar paths. Active in the sample."
+      - key: BEXCH
+        label: "Exchange directory (BRAVOEXCH)"
+        type: path
+        required: true
+        validation: { kind: path-exists, path_mode: dir, severity: error }
+        description: "Active in the sample. BRAVO-Toolkit's confirmed bravo.ini reader trims a trailing slash from this key."
+      - key: BLOGMAX
+        label: "BLOG max size/count"
+        type: int
+        required: false
+        description: "Active in the sample (value 1000)."
+
+  - name: net
+    label: "Network"
+    description: "Mostly commented-out defaults in the sample; only SENDMAX was active."
+    fields:
+      - key: PORT
+        label: "Listen port"
+        type: int
+        required: false
+        validation: { kind: range, min: 1, max: 65535, severity: warning }
+        description: "Commented out in the sample."
+      - key: CLNOTIFY
+        label: "Client notify"
+        type: bool
+        required: false
+        description: "Commented out in the sample."
+      - key: WAIT
+        label: "Max send/recv wait (ms)"
+        type: int
+        required: false
+        description: "Default 60000 ms. Commented out in the sample."
+      - key: WAITOBJ
+        label: "WaitForMultipleObjects wait (ms)"
+        type: int
+        required: false
+        description: "Default 1000 ms. Commented out in the sample."
+      - key: WAITACC
+        label: "Second-connection wait (ms)"
+        type: int
+        required: false
+        description: "Default 1000 ms. Commented out in the sample."
+      - key: RECVMAX
+        label: "Min read block size"
+        type: int
+        required: false
+        description: "Default 1024. Commented out in the sample."
+      - key: SENDMAX
+        label: "Max send block size"
+        type: int
+        required: false
+        description: "Default 65536. Active in the sample (value 13107200)."
+      - key: KEEPALIVE
+        label: "Thread pool recycle (ms)"
+        type: int
+        required: false
+        description: "Default 5000 ms. Commented out in the sample."
+
+  - name: Debug
+    label: "Debug / Trace"
+    description: >-
+      Verified section: BRAVO-Toolkit's confirmed bravo.ini reader resolves
+      FILE relative to the LIMS install directory when not absolute.
+    fields:
+      - key: DEBUG_LEVEL
+        label: "Debug level bitmask"
+        type: string
+        required: false
+        validation: { kind: regex, pattern: "^[0-9A-Fa-f]+$", severity: warning }
+        description: "Hex bitmask, see the section's own comment block for flag meanings. Commented out in the sample."
+      - key: TRACE_LEVEL
+        label: "Trace level bitmask"
+        type: string
+        required: false
+        validation: { kind: regex, pattern: "^[0-9A-Fa-f]+$", severity: warning }
+        description: "Hex bitmask. Active in the sample (value ffffffff)."
+      - key: FILE
+        label: "Trace log file"
+        type: string
+        required: false
+        description: "May be relative (resolved against the install dir) or absolute; not validated for existence here for that reason. Active in the sample."
+      - key: DELETE
+        label: "Delete trace on start"
+        type: bool
+        required: false
+        description: "Active in the sample (value 0)."
+      - key: CON
+        label: "Console trace bitmask"
+        type: string
+        required: false
+        validation: { kind: regex, pattern: "^[0-9A-Fa-f]+$", severity: warning }
+        description: "Hex bitmask. Active in the sample."
+      - key: CONF
+        label: "Trace config/output filename"
+        type: string
+        required: false
+        description: "Active in the sample (value netsrv.out)."
+      - key: STAMP
+        label: "Timestamp trace lines"
+        type: bool
+        required: false
+        description: "Commented out in the sample."
+      - key: STAT
+        label: "Trace statistics"
+        type: bool
+        required: false
+        description: "Commented out in the sample."
