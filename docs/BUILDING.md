@@ -133,8 +133,11 @@ Win32 display). After building, manually verify:
 
 ## CI
 
-No CI workflow is configured yet. A `windows-latest` GitHub Actions runner
-executing `go vet ./...`, `gofmt -l .`, `go test ./...`, and the release
-build command above (steps 1–2 above cannot run in CI; only compilation
-and the walk-independent unit tests can) would be a reasonable starting
-point.
+`.github/workflows/ci.yml` runs on `windows-latest` (required: `lxn/walk`
+and everything depending on it only compile on Windows) for every push
+and PR against `main`: `go vet ./...`, a `gofmt -l` check that excludes
+the vendored `third_party/walk/`, `go test ./...`, both the console and
+release (`-H windowsgui -s -w`) builds, and uploads the built
+`configurator.exe` as a workflow artifact. The manual GUI checklist
+above (steps 1–2 of "Windows compatibility" cannot run in CI — no
+interactive desktop session) still requires a real machine.
