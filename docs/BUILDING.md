@@ -41,12 +41,35 @@ regenerating, then remove it again — only the compiled `rsrc.syso` needs
 to be committed; a side-by-side `.manifest` file left next to the built
 `.exe` is not required and was not what fixed the crash.
 
+## Required: vendored/patched `lxn/walk` (`third_party/walk/`)
+
+`go.mod` has `replace github.com/lxn/walk => ./third_party/walk`. This is
+a full local copy of `github.com/lxn/walk@v0.0.0-20210112085537-c389da54e794`
+with one patch, in `tooltip.go`'s `addTool()`: a failing `TTM_ADDTOOL`
+call is treated as non-fatal instead of returning an error. **Do not
+delete `third_party/walk/` or remove the `replace` directive** — without
+the patch, the editor `MainWindow` panics on Windows 11 (see
+`docs/ARCHITECTURE.md`'s "Bugs found via manual GUI testing" §1). This is
+a second, distinct fix from the `rsrc.syso` manifest above: the manifest
+fixes `TTM_ADDTOOL` for the *first* window in a process; the vendored
+patch fixes it for a *later* window whose per-thread `WindowGroup`
+(and therefore `ToolTip`) was freshly recreated after a previous one
+tore down — the manifest alone does not cover that case.
+
+If `lxn/walk` is ever upgraded, re-apply the patch: diff the new
+upstream `tooltip.go` against `third_party/walk/tooltip.go`, keep only
+the `addTool()` change (search for `PATCHED (bravo-bis-configurator)`),
+and re-copy everything else from upstream.
+
 ## Build
 
 ```sh
 go build ./...              # everything, including a console-mode configurator.exe
 go vet ./...
-gofmt -l .                  # should print nothing
+gofmt -l .                  # should print nothing for files owned by this repo;
+                             # third_party/walk/** is vendored upstream source
+                             # and is intentionally left unformatted/unmodified
+                             # except for the one patched line noted above
 go test ./...
 ```
 

@@ -188,16 +188,30 @@ func runEditorWindow(model *FormModel) error {
 	var mw *walk.MainWindow
 	var saveButton *walk.PushButton
 	var summaryLabel *walk.Label
-	statusLabels := map[string]*walk.Label{}
+	// statusLabels holds **walk.Label (the address of each field's local
+	// AssignTo variable), not *walk.Label directly: at the time
+	// buildFieldRow populates this map, the declarative widget tree has
+	// only been described, not yet built, so the label variable is still
+	// nil. walk's declarative builder fills the real *walk.Label into that
+	// variable during Create(). Storing the address lets refresh() always
+	// read the variable's *current* value instead of the nil snapshot from
+	// construction time.
+	statusLabels := map[string]**walk.Label{}
 
 	refresh := func() {
 		for _, sec := range model.Sections {
 			for _, f := range sec.Fields {
-				lbl, ok := statusLabels[fieldKey(sec.Name, f.Key)]
-				if !ok {
+				lblPtr, ok := statusLabels[fieldKey(sec.Name, f.Key)]
+				if !ok || lblPtr == nil || *lblPtr == nil {
+					// Not registered yet, or this field's status Label
+					// hasn't been constructed by walk yet — genuinely
+					// expected during initial widget construction, since
+					// setting a field's starting value can itself fire a
+					// change event (see buildEditorWidget) before every
+					// widget in the form exists.
 					continue
 				}
-				setFieldStatusLabel(lbl, f)
+				setFieldStatusLabel(*lblPtr, f)
 			}
 		}
 		if saveButton != nil {
@@ -282,7 +296,7 @@ func setFieldStatusLabel(lbl *walk.Label, f FieldView) {
 
 // buildSectionTab renders one schema section as a TabPage: a scrollable
 // list of label/editor/status rows, one per field.
-func buildSectionTab(model *FormModel, sec *SectionView, statusLabels map[string]*walk.Label, onChanged func()) TabPage {
+func buildSectionTab(model *FormModel, sec *SectionView, statusLabels map[string]**walk.Label, onChanged func()) TabPage {
 	var rows []Widget
 	for i := range sec.Fields {
 		f := &sec.Fields[i]
@@ -308,7 +322,7 @@ func buildSectionTab(model *FormModel, sec *SectionView, statusLabels map[string
 // leading "*" when required), a type-appropriate editor widget, and a
 // status label that setFieldStatusLabel keeps in sync with validation
 // findings.
-func buildFieldRow(model *FormModel, f *FieldView, statusLabels map[string]*walk.Label, onChanged func()) Widget {
+func buildFieldRow(model *FormModel, f *FieldView, statusLabels map[string]**walk.Label, onChanged func()) Widget {
 	var statusLbl *walk.Label
 	labelText := f.Label
 	if labelText == "" {
@@ -331,11 +345,11 @@ func buildFieldRow(model *FormModel, f *FieldView, statusLabels map[string]*walk
 		Children: []Widget{
 			Label{Text: labelText, ToolTipText: f.Description},
 			editor,
-			HSpacer{ColumnSpan: 0},
+			HSpacer{},
 			Label{AssignTo: &statusLbl, Text: ""},
 		},
 	}
-	statusLabels[fieldKey(section, key)] = statusLbl
+	statusLabels[fieldKey(section, key)] = &statusLbl
 	return row
 }
 

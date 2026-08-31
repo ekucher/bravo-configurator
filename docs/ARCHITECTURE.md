@@ -62,6 +62,51 @@ belong to Windows LIMS software) and let every layer of the GUI package
 actually be built and, where feasible, unit-tested during development
 instead of shipped unverified.
 
+## Bugs found via manual GUI testing
+
+`internal/app/window.go` cannot be exercised in `go test` (no headless
+Win32 display), so several real bugs only reproduced once a real
+`MainWindow` was constructed against the bundled schema
+(`internal/app/manual_window_test.go`'s `TestManualEditorWindow`, run
+with `RUN_MANUAL_GUI_TEST=1`) or the built `.exe` was driven end-to-end.
+
+1. **`TTM_ADDTOOL failed` panic on `MainWindow`/`Dialog` construction
+   (Windows 11)** — an unresolved upstream `lxn/walk` bug
+   ([lxn/walk#805](https://github.com/lxn/walk/issues/805)). First fixed
+   for the profile/encoding `Dialog`s by embedding a Common-Controls-v6
+   application manifest as a PE resource (`cmd/configurator/rsrc.syso`;
+   see `BUILDING.md`). The same failure then recurred specifically for
+   the main editor `MainWindow`, opened immediately after a modal
+   `Dialog` closes: `lxn/walk` caches one `ToolTip` control per
+   OS-thread `WindowGroup`; when the last window of a group closes, the
+   group (and its `ToolTip`) is torn down, and the next top-level window
+   gets a freshly created `ToolTip` — and on this Windows 11 build, that
+   fresh tooltip's first `TTM_ADDTOOL` call fails again, regardless of
+   the manifest. Root-caused by adding temporary `dbg()` stderr tracing
+   at each `RunGUI` step, then writing `TestManualEditorWindow` to call
+   `runEditorWindow` directly so `go test` would surface the real Go
+   stack trace instead of the standalone `.exe` silently vanishing.
+   Fixed by vendoring `github.com/lxn/walk` into `third_party/walk/`
+   (`go.mod` `replace` directive) and patching `tooltip.go`'s
+   `addTool()` to treat a failing `TTM_ADDTOOL` as non-fatal (matching
+   the community-documented workaround for the still-open upstream
+   issue): the affected widget simply loses its hover tooltip, nothing
+   else is affected.
+2. **Nil pointer dereference in `setFieldStatusLabel`** — the editor
+   window's `statusLabels` map was declared as `map[string]*walk.Label`
+   and populated with each field's `AssignTo` target *before* `walk`
+   actually assigns the real widget pointer during `Create()`. Setting a
+   field's initial value via `LineEdit{Text: f.Value}` synchronously
+   fires `OnTextChanged` during construction, which called `refresh()`
+   and dereferenced the still-nil captured pointer. Fixed by storing the
+   *address* of each local `AssignTo` variable instead
+   (`map[string]**walk.Label`), so later reads always see `walk`'s
+   eventual assignment, plus defensive nil-checks in `refresh()`.
+
+Both bugs were confirmed fixed by screenshot: the full editor window now
+renders all 5 tabs with correct field widgets and an
+"Errors: 0 Warnings: 0" summary for a valid test document.
+
 ## Data flow (GUI path)
 
 ```
